@@ -4,10 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Shield, Clock, Wrench, Award, ArrowRight, CheckCircle } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import productsData from "@/data/products.json";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { listCategoriesWithCounts, type Category } from "@/api/categories";
 
 const Home = () => {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     document.title = "STG CORP - Официальный поставщик оборудования STALEX в Узбекистане";
     
@@ -15,7 +18,21 @@ const Home = () => {
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Поставка промышленного оборудования STALEX в Узбекистан. Гильотины, листогибы, прессы, станки. Гарантия, сервис, консультации.');
     }
+
+    loadCategories();
   }, []);
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      const data = await listCategoriesWithCounts();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const advantages = [
     {
@@ -124,32 +141,49 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              {productsData.categories.map((category) => (
-                <Link 
-                  key={category.id} 
-                  to={`/catalog/${category.slug}`}
-                  className="group"
-                >
-                  <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full">
-                    <div className="aspect-square bg-secondary relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                        <span className="text-white font-medium flex items-center gap-2">
-                          Смотреть <ArrowRight size={16} />
-                        </span>
+              {loading ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Загрузка категорий...
+                </div>
+              ) : categories.length === 0 ? (
+                <div className="col-span-full text-center py-8 text-muted-foreground">
+                  Категории не найдены
+                </div>
+              ) : (
+                categories.map((category) => (
+                  <Link 
+                    key={category.id} 
+                    to={`/catalog/${category.slug}`}
+                    className="group"
+                  >
+                    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full">
+                      <div className="aspect-square bg-secondary relative overflow-hidden">
+                        {category.cover_url && (
+                          <img 
+                            src={category.cover_url} 
+                            alt={category.title}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                          <span className="text-white font-medium flex items-center gap-2">
+                            Смотреть <ArrowRight size={16} />
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-4">
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
-                        {category.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-3">{category.description}</p>
-                      <div className="text-sm font-medium text-primary">
-                        {category.productCount} моделей
+                      <div className="p-4">
+                        <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                          {category.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-3">{category.description}</p>
+                        <div className="text-sm font-medium text-primary">
+                          {category.productCount} моделей
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </Link>
-              ))}
+                    </Card>
+                  </Link>
+                ))
+              )}
             </div>
 
             <div className="text-center">

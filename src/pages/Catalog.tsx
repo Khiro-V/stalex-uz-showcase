@@ -4,11 +4,13 @@ import { Input } from "@/components/ui/input";
 import { Search, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import productsData from "@/data/products.json";
 import { useState, useEffect } from "react";
+import { listCategoriesWithCounts, type Category } from "@/api/categories";
 
 const Catalog = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   
   useEffect(() => {
     document.title = "Каталог оборудования STALEX | STG CORP";
@@ -17,11 +19,25 @@ const Catalog = () => {
     if (metaDescription) {
       metaDescription.setAttribute('content', 'Каталог промышленного оборудования STALEX: гильотинные ножницы, листогибочные прессы, гидравлические прессы, вальцы. Технические характеристики, цены.');
     }
+
+    loadCategories();
   }, []);
 
-  const filteredCategories = productsData.categories.filter(category =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchQuery.toLowerCase())
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      const data = await listCategoriesWithCounts();
+      setCategories(data);
+    } catch (error) {
+      console.error('Failed to load categories:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCategories = categories.filter(category =>
+    category.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (category.description && category.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
@@ -60,7 +76,11 @@ const Catalog = () => {
         {/* Categories Grid */}
         <section className="py-12">
           <div className="container mx-auto px-4">
-            {filteredCategories.length > 0 ? (
+            {loading ? (
+              <div className="text-center py-12 text-muted-foreground">
+                Загрузка категорий...
+              </div>
+            ) : filteredCategories.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredCategories.map((category) => (
                   <Link 
@@ -70,6 +90,13 @@ const Catalog = () => {
                   >
                     <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full">
                       <div className="aspect-[4/3] bg-secondary relative overflow-hidden">
+                        {category.cover_url && (
+                          <img 
+                            src={category.cover_url} 
+                            alt={category.title}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-6">
                           <span className="text-white font-medium flex items-center gap-2">
                             Смотреть модели <ArrowRight size={18} />
@@ -78,7 +105,7 @@ const Catalog = () => {
                       </div>
                       <div className="p-6">
                         <h2 className="font-bold text-xl mb-3 group-hover:text-primary transition-colors">
-                          {category.name}
+                          {category.title}
                         </h2>
                         <p className="text-muted-foreground mb-4">
                           {category.description}

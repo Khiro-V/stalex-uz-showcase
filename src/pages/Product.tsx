@@ -5,38 +5,56 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Download, FileText } from "lucide-react";
-import productsData from "@/data/products.json";
 import { useToast } from "@/hooks/use-toast";
+import { getProduct, getRelatedProducts, type Product } from "@/api/products";
+import { getCategoryBySlug } from "@/api/categories";
 
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  categoryId: string;
-  images: string[];
-  price: string;
-  specs: Record<string, string>;
-  description: string;
-  features?: string[];
-}
-
-const Product = () => {
+const ProductPage = () => {
   const { slug } = useParams<{ slug: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [categoryName, setCategoryName] = useState<string>("");
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    const foundProduct = productsData.products.find((p: any) => p.slug === slug);
-    setProduct(foundProduct || null);
-
-    if (foundProduct) {
-      const related = productsData.products
-        .filter((p: any) => p.categoryId === foundProduct.categoryId && p.slug !== slug)
-        .slice(0, 3);
-      setRelatedProducts(related);
+    if (slug) {
+      loadProduct();
     }
   }, [slug]);
+
+  const loadProduct = async () => {
+    if (!slug) return;
+
+    try {
+      setLoading(true);
+      const foundProduct = await getProduct(slug);
+      
+      if (!foundProduct) {
+        setProduct(null);
+        return;
+      }
+
+      setProduct(foundProduct);
+
+      // Load related products and category
+      if (foundProduct.category_id) {
+        const [related, category] = await Promise.all([
+          getRelatedProducts(foundProduct.category_id, foundProduct.id, 3),
+          getCategoryBySlug(foundProduct.category_id) // Assuming category_id is the slug
+        ]);
+        
+        setRelatedProducts(related);
+        if (category) {
+          setCategoryName(category.title);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load product:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleQuoteRequest = () => {
     toast({
@@ -46,14 +64,16 @@ const Product = () => {
   };
 
   const handleDownloadPDF = () => {
+    if (!product) return;
+
     const printWindow = window.open("", "_blank");
-    if (printWindow && product) {
+    if (printWindow) {
       printWindow.document.write(`
         <!DOCTYPE html>
         <html lang="ru">
         <head>
           <meta charset="UTF-8">
-          <title>${product.name} - Технический паспорт</title>
+          <title>${product.title} - Технический паспорт</title>
           <style>
             @page { size: A4; margin: 20mm; }
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
@@ -68,12 +88,12 @@ const Product = () => {
         </head>
         <body>
           <div class="header">
-            <h1>${product.name}</h1>
+            <h1>${product.title}</h1>
             <p><strong>STG CORP</strong> - Официальный дистрибьютор STALEX в Узбекистане</p>
           </div>
           
           <h2>Описание</h2>
-          <p>${product.description}</p>
+          <p>${product.short_description || ''}</p>
           
           <h2>Технические характеристики</h2>
           <table>
@@ -108,16 +128,40 @@ const Product = () => {
     }
   };
 
-  if (!product) return null;
+  if (loading) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background pt-24">
+          <div className="container mx-auto px-4 py-8 text-center">
+            <p className="text-muted-foreground">Загрузка...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
-  const categoryData = productsData.categories.find((cat: any) => cat.slug === product.categoryId);
+  if (!product) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-screen bg-background pt-24">
+          <div className="container mx-auto px-4 py-8 text-center">
+            <p className="text-muted-foreground">Товар не найден</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
-    name: product.name,
-    description: product.description,
-    image: product.images[0],
+    name: product.title,
+    description: product.short_description || "",
+    image: product.images[0] || "",
     brand: {
       "@type": "Brand",
       name: "STALEX"
@@ -139,21 +183,21 @@ const Product = () => {
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Главная", item: "https://stalex-shop.uz" },
       { "@type": "ListItem", position: 2, name: "Каталог", item: "https://stalex-shop.uz/catalog" },
-      { "@type": "ListItem", position: 3, name: categoryData?.name, item: `https://stalex-shop.uz/catalog/${product.categoryId}` },
-      { "@type": "ListItem", position: 4, name: product.name, item: `https://stalex-shop.uz/product/${product.slug}` }
+      { "@type": "ListItem", position: 3, name: categoryName, item: `https://stalex-shop.uz/catalog/${product.category_id}` },
+      { "@type": "ListItem", position: 4, name: product.title, item: `https://stalex-shop.uz/product/${product.slug}` }
     ]
   };
 
   return (
     <>
       <Helmet>
-        <title>{product.name} - Купить в Узбекистане | STG CORP</title>
-        <meta name="description" content={`${product.description} Официальный дистрибьютор STALEX. Гарантия качества. ☎ +9 9897 433-51-15`} />
+        <title>{product.title} - Купить в Узбекистане | STG CORP</title>
+        <meta name="description" content={`${product.short_description} Официальный дистрибьютор STALEX. Гарантия качества. ☎ +9 9897 433-51-15`} />
         <link rel="canonical" href={`https://stalex-shop.uz/product/${slug}`} />
-        <meta property="og:title" content={`${product.name} - STALEX`} />
-        <meta property="og:description" content={product.description} />
+        <meta property="og:title" content={`${product.title} - STALEX`} />
+        <meta property="og:description" content={product.short_description || ""} />
         <meta property="og:url" content={`https://stalex-shop.uz/product/${slug}`} />
-        <meta property="og:image" content={product.images[0]} />
+        <meta property="og:image" content={product.images[0] || ""} />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbJsonLd)}</script>
       </Helmet>
@@ -168,9 +212,9 @@ const Product = () => {
             <li>/</li>
             <li><Link to="/catalog" className="hover:text-primary transition-colors">Каталог</Link></li>
             <li>/</li>
-            <li><Link to={`/catalog/${product.categoryId}`} className="hover:text-primary transition-colors">{categoryData?.name}</Link></li>
+            <li><Link to={`/catalog/${product.category_id}`} className="hover:text-primary transition-colors">{categoryName}</Link></li>
             <li>/</li>
-            <li className="text-foreground font-medium">{product.name}</li>
+            <li className="text-foreground font-medium">{product.title}</li>
           </ol>
         </nav>
 
@@ -178,31 +222,19 @@ const Product = () => {
           <div className="grid lg:grid-cols-2 gap-12 mb-12">
             {/* Image Gallery */}
             <div className="bg-muted rounded-lg overflow-hidden aspect-square">
-              <img
-                src={product.images[0]}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              {product.images[0] && (
+                <img
+                  src={product.images[0]}
+                  alt={product.title}
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
 
             {/* Product Info */}
             <div>
-              <h1 className="text-4xl font-bold text-foreground mb-4">{product.name}</h1>
-              <p className="text-lg text-muted-foreground mb-6">{product.description}</p>
-
-              {product.features && (
-                <div className="mb-6">
-                  <h2 className="text-xl font-bold text-foreground mb-3">Ключевые особенности</h2>
-                  <ul className="space-y-2">
-                    {product.features.map((feature, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-accent mt-1">✓</span>
-                        <span className="text-muted-foreground">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              <h1 className="text-4xl font-bold text-foreground mb-4">{product.title}</h1>
+              <p className="text-lg text-muted-foreground mb-6">{product.short_description}</p>
 
               <div className="flex flex-wrap gap-4 mb-8">
                 <Button size="lg" onClick={handleQuoteRequest} className="flex-1">
@@ -257,16 +289,18 @@ const Product = () => {
                     className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-all group"
                   >
                     <div className="aspect-square bg-muted overflow-hidden">
-                      <img
-                        src={related.images[0]}
-                        alt={related.name}
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {related.images[0] && (
+                        <img
+                          src={related.images[0]}
+                          alt={related.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
                     </div>
                     <div className="p-4">
                       <h3 className="font-bold text-foreground mb-2 group-hover:text-primary transition-colors">
-                        {related.name}
+                        {related.title}
                       </h3>
                       <Button size="sm">Подробнее</Button>
                     </div>
@@ -283,4 +317,4 @@ const Product = () => {
   );
 };
 
-export default Product;
+export default ProductPage;

@@ -5,28 +5,54 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
-import productsData from "@/data/products.json";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Product {
   id: string;
-  name: string;
+  title: string;
   slug: string;
-  categoryId: string;
+  category_id: string | null;
   images: string[];
-  specs: Record<string, string>;
+  specs: Record<string, any>;
 }
 
 const Compare = () => {
   const [compareList, setCompareList] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("compareList");
-    if (stored) {
-      const ids = JSON.parse(stored);
-      const products = productsData.products.filter((p: any) => ids.includes(p.id));
-      setCompareList(products.slice(0, 4));
-    }
+    loadCompareList();
   }, []);
+
+  const loadCompareList = async () => {
+    try {
+      setLoading(true);
+      const stored = localStorage.getItem("compareList");
+      if (stored) {
+        const ids = JSON.parse(stored);
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .in('id', ids)
+          .eq('is_published', true);
+
+        if (error) {
+          console.error('Error loading compare list:', error);
+          return;
+        }
+
+        const products = (data || []).map(item => ({
+          ...item,
+          images: Array.isArray(item.images) ? item.images : [],
+          specs: typeof item.specs === 'object' && item.specs !== null ? item.specs : {}
+        })) as Product[];
+
+        setCompareList(products.slice(0, 4));
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const removeFromCompare = (id: string) => {
     const updated = compareList.filter((p) => p.id !== id);
@@ -62,7 +88,11 @@ const Compare = () => {
         <section className="container mx-auto px-4 py-8">
           <h1 className="text-4xl font-bold text-foreground mb-8">Сравнение товаров</h1>
 
-          {compareList.length === 0 ? (
+          {loading ? (
+            <div className="text-center py-12 text-muted-foreground">
+              Загрузка...
+            </div>
+          ) : compareList.length === 0 ? (
             <div className="bg-card rounded-lg p-12 text-center">
               <p className="text-xl text-muted-foreground mb-6">
                 Вы еще не добавили товары для сравнения
@@ -90,13 +120,15 @@ const Compare = () => {
                             <X size={16} />
                           </button>
                           <Link to={`/product/${product.slug}`}>
-                            <img
-                              src={product.images[0]}
-                              alt={product.name}
-                              className="w-full aspect-square object-cover rounded-lg mb-3"
-                            />
+                            {product.images[0] && (
+                              <img
+                                src={product.images[0]}
+                                alt={product.title}
+                                className="w-full aspect-square object-cover rounded-lg mb-3"
+                              />
+                            )}
                             <h3 className="text-sm font-bold text-foreground hover:text-primary transition-colors">
-                              {product.name}
+                              {product.title}
                             </h3>
                           </Link>
                         </div>
