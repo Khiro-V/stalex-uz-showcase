@@ -1,73 +1,151 @@
-# Welcome to your Lovable project
+# StankoGroup - Каталог станков
 
-## Project info
+Веб-приложение для каталога промышленного оборудования с админ-панелью.
 
-**URL**: https://lovable.dev/projects/54490c06-0c95-4a2e-ae47-aeb7246850cc
+## Технологии
 
-## How can I edit this code?
+- **Frontend**: React 18, TypeScript, Vite
+- **UI**: Tailwind CSS, shadcn/ui, Radix UI
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **Routing**: React Router
+- **State**: TanStack Query
 
-There are several ways of editing your application.
+## Быстрый старт
 
-**Use Lovable**
+### 1. Установка зависимостей
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/54490c06-0c95-4a2e-ae47-aeb7246850cc) and start prompting.
+```bash
+npm install
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+### 2. Настройка Supabase
 
-**Use your preferred IDE**
+#### 2.1 Создайте проект в Supabase
+1. Перейдите на [supabase.com](https://supabase.com)
+2. Создайте новый проект
+3. Получите URL и anon key из Settings → API
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+#### 2.2 Настройте переменные окружения
+Скопируйте `.env.example` в `.env`:
+```bash
+cp .env.example .env
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Заполните значения в `.env`:
+```env
+VITE_SUPABASE_URL=your-project-url.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
 
-Follow these steps:
+#### 2.3 Выполните миграцию базы данных
+1. Откройте SQL Editor в Supabase: [Dashboard → SQL Editor](https://supabase.com/dashboard/project/_/sql/new)
+2. Скопируйте и выполните SQL-скрипт из миграции (создание таблиц, RLS политик, триггеров)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+#### 2.4 Настройте Storage
+Storage bucket `products` создается автоматически миграцией.
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+#### 2.5 Настройте админов
+В SQL Editor обновите функцию `is_admin()`, заменив placeholder email'ы на реальные:
 
-# Step 3: Install the necessary dependencies.
-npm i
+```sql
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  RETURN auth.jwt() ->> 'email' IN (
+    'your-admin@example.com',
+    'another-admin@example.com'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+```
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+#### 2.6 Создайте админских пользователей
+1. Перейдите в Authentication → Users
+2. Создайте пользователей с email'ами, указанными в `is_admin()`
+3. Используйте эти данные для входа в `/auth`
+
+### 3. Запуск приложения
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Приложение будет доступно на `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 4. Сборка для продакшена
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+Готовые файлы будут в папке `dist/`
 
-## What technologies are used for this project?
+## Структура проекта
 
-This project is built with:
+```
+src/
+├── components/
+│   ├── admin/          # Компоненты админки
+│   └── ui/             # shadcn/ui компоненты
+├── hooks/              # React хуки
+├── integrations/       # Supabase клиент
+├── pages/
+│   ├── admin/          # Страницы админки
+│   ├── Auth.tsx        # Страница входа
+│   └── ...             # Публичные страницы
+└── lib/                # Утилиты
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+## Админ-панель
 
-## How can I deploy this project?
+### Вход
+1. Перейдите на `/auth`
+2. Используйте email и пароль админского аккаунта
+3. После входа вы будете перенаправлены на `/admin`
 
-Simply open [Lovable](https://lovable.dev/projects/54490c06-0c95-4a2e-ae47-aeb7246850cc) and click on Share -> Publish.
+### Функционал
+- **Dashboard**: Статистика по товарам и категориям
+- **Товары**: 
+  - Список всех товаров с поиском
+  - Добавление/редактирование товара
+  - Загрузка изображений в Supabase Storage
+  - Управление характеристиками (спецификациями)
+  - Публикация/снятие с публикации
+- **Категории**:
+  - Список категорий
+  - Добавление/редактирование категории
 
-## Can I connect a custom domain to my Lovable project?
+## База данных
 
-Yes, you can!
+### Таблицы
+- `categories` - Категории товаров
+- `products` - Товары с характеристиками и изображениями
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### RLS (Row Level Security)
+- Публичный доступ: только опубликованные товары
+- Админский доступ: все операции (через функцию `is_admin()`)
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Storage
+- Bucket: `products` (public)
+- RLS: только админы могут загружать/удалять
+
+## Контакты
+
+- Email: info@stankogroup.uz
+- Телефон: +998 97 433-51-15
+- Адрес: Тошкент шахар, Уста Ширин кўчаси, 116 уй
+
+## Источник данных
+
+Каталог, фото и характеристики взяты с [stalex.ru](https://stalex.ru)
+
+---
+
+## Lovable Project
+
+**URL**: https://lovable.dev/projects/54490c06-0c95-4a2e-ae47-aeb7246850cc
+
+### Editing Options
+- Use [Lovable](https://lovable.dev/projects/54490c06-0c95-4a2e-ae47-aeb7246850cc) for AI-assisted development
+- Clone and work locally with your preferred IDE
+- Edit directly in GitHub or use GitHub Codespaces
