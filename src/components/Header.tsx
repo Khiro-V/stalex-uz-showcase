@@ -70,6 +70,9 @@ const Header = () => {
             <Link to="/news" className="text-foreground hover:text-primary transition-colors font-medium">
               Новости
             </Link>
+            <Link to="/downloads" className="text-foreground hover:text-primary transition-colors font-medium">
+              Загрузки
+            </Link>
             <Link to="/contacts" className="text-foreground hover:text-primary transition-colors font-medium">
               Контакты
             </Link>
@@ -110,6 +113,9 @@ const Header = () => {
             </Link>
             <Link to="/news" className="text-foreground hover:text-primary transition-colors font-medium py-2">
               Новости
+            </Link>
+            <Link to="/downloads" className="text-foreground hover:text-primary transition-colors font-medium py-2">
+              Загрузки
             </Link>
             <Link to="/contacts" className="text-foreground hover:text-primary transition-colors font-medium py-2">
               Контакты

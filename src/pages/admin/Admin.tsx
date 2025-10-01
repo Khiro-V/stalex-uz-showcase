@@ -8,6 +8,9 @@ import CategoriesList from './CategoriesList';
 import CategoryForm from './CategoryForm';
 import NewsList from './NewsList';
 import NewsForm from './NewsForm';
+import LeadsList from './LeadsList';
+import DownloadsList from './DownloadsList';
+import DownloadForm from './DownloadForm';
 
 const Admin = () => {
   return (
@@ -24,6 +27,10 @@ const Admin = () => {
           <Route path="news" element={<NewsList />} />
           <Route path="news/new" element={<NewsForm />} />
           <Route path="news/:id" element={<NewsForm />} />
+          <Route path="leads" element={<LeadsList />} />
+          <Route path="downloads" element={<DownloadsList />} />
+          <Route path="downloads/new" element={<DownloadForm />} />
+          <Route path="downloads/:id" element={<DownloadForm />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </AdminLayout>

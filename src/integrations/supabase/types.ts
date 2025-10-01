@@ -44,6 +44,104 @@ export type Database = {
         }
         Relationships: []
       }
+      download_categories: {
+        Row: {
+          id: number
+          slug: string
+          title: string
+        }
+        Insert: {
+          id?: number
+          slug: string
+          title: string
+        }
+        Update: {
+          id?: number
+          slug?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      downloads: {
+        Row: {
+          category_id: number | null
+          created_at: string | null
+          description: string | null
+          file_url: string
+          id: number
+          is_published: boolean | null
+          published_at: string | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          file_url: string
+          id?: number
+          is_published?: boolean | null
+          published_at?: string | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category_id?: number | null
+          created_at?: string | null
+          description?: string | null
+          file_url?: string
+          id?: number
+          is_published?: boolean | null
+          published_at?: string | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "downloads_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "download_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: number
+          message: string | null
+          model: string | null
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: number
+          message?: string | null
+          model?: string | null
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: number
+          message?: string | null
+          model?: string | null
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       news_posts: {
         Row: {
           author_email: string | null

@@ -14,6 +14,8 @@ import Auth from "./pages/Auth";
 import Admin from "./pages/admin/Admin";
 import News from "./pages/News";
 import NewsPost from "./pages/NewsPost";
+import Contacts from "./pages/Contacts";
+import Downloads from "./pages/Downloads";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +36,8 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/news" element={<News />} />
           <Route path="/news/:slug" element={<NewsPost />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/downloads" element={<Downloads />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin/*" element={<Admin />} />
           <Route path="*" element={<NotFound />} />

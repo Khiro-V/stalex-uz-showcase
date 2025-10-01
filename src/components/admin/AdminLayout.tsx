@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { LogOut, Package, FolderTree, Newspaper } from 'lucide-react';
+import { LogOut, Package, FolderTree, Newspaper, Download, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface AdminLayoutProps {
@@ -62,6 +62,24 @@ export const AdminLayout = ({ children }: AdminLayoutProps) => {
                   >
                     <Newspaper className="mr-2 h-4 w-4" />
                     Новости
+                  </Button>
+                </Link>
+                <Link to="/admin/downloads">
+                  <Button
+                    variant={isActive('/admin/downloads') ? 'default' : 'ghost'}
+                    size="sm"
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Загрузки
+                  </Button>
+                </Link>
+                <Link to="/admin/leads">
+                  <Button
+                    variant={isActive('/admin/leads') ? 'default' : 'ghost'}
+                    size="sm"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Заявки
                   </Button>
                 </Link>
               </nav>
