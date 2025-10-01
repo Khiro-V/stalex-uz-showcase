@@ -12,6 +12,8 @@ import Service from "./pages/Service";
 import About from "./pages/About";
 import Auth from "./pages/Auth";
 import Admin from "./pages/admin/Admin";
+import News from "./pages/News";
+import NewsPost from "./pages/NewsPost";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/compare" element={<Compare />} />
           <Route path="/service" element={<Service />} />
           <Route path="/about" element={<About />} />
+          <Route path="/news" element={<News />} />
+          <Route path="/news/:slug" element={<NewsPost />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin/*" element={<Admin />} />
           <Route path="*" element={<NotFound />} />

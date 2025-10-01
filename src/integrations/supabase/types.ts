@@ -44,6 +44,51 @@ export type Database = {
         }
         Relationships: []
       }
+      news_posts: {
+        Row: {
+          author_email: string | null
+          content_md: string | null
+          cover_url: string | null
+          created_at: string | null
+          excerpt: string | null
+          id: number
+          is_published: boolean | null
+          published_at: string | null
+          slug: string
+          tags: string[] | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_email?: string | null
+          content_md?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: number
+          is_published?: boolean | null
+          published_at?: string | null
+          slug: string
+          tags?: string[] | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_email?: string | null
+          content_md?: string | null
+          cover_url?: string | null
+          created_at?: string | null
+          excerpt?: string | null
+          id?: number
+          is_published?: boolean | null
+          published_at?: string | null
+          slug?: string
+          tags?: string[] | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           category_id: string | null

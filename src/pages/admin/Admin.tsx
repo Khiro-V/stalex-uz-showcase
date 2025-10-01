@@ -6,6 +6,8 @@ import ProductsList from './ProductsList';
 import ProductForm from './ProductForm';
 import CategoriesList from './CategoriesList';
 import CategoryForm from './CategoryForm';
+import NewsList from './NewsList';
+import NewsForm from './NewsForm';
 
 const Admin = () => {
   return (
@@ -19,6 +21,9 @@ const Admin = () => {
           <Route path="categories" element={<CategoriesList />} />
           <Route path="categories/new" element={<CategoryForm />} />
           <Route path="categories/:id" element={<CategoryForm />} />
+          <Route path="news" element={<NewsList />} />
+          <Route path="news/new" element={<NewsForm />} />
+          <Route path="news/:id" element={<NewsForm />} />
           <Route path="*" element={<Navigate to="/admin" replace />} />
         </Routes>
       </AdminLayout>
