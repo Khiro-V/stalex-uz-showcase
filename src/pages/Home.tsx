@@ -6,10 +6,16 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useEffect, useState } from "react";
 import { listCategoriesWithCounts, type Category } from "@/api/categories";
+import { listLatestNews, type NewsPost } from "@/api/news";
+import { format } from "date-fns";
+import { ru } from "date-fns/locale";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Home = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [news, setNews] = useState<NewsPost[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
 
   useEffect(() => {
     document.title = "STG CORP - Официальный поставщик оборудования STALEX в Узбекистане";
@@ -20,6 +26,7 @@ const Home = () => {
     }
 
     loadCategories();
+    loadNews();
   }, []);
 
   const loadCategories = async () => {
@@ -31,6 +38,18 @@ const Home = () => {
       console.error('Failed to load categories:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadNews = async () => {
+    try {
+      setNewsLoading(true);
+      const data = await listLatestNews(3);
+      setNews(data);
+    } catch (error) {
+      console.error('Failed to load news:', error);
+    } finally {
+      setNewsLoading(false);
     }
   };
 
@@ -57,29 +76,18 @@ const Home = () => {
     }
   ];
 
-  const news = [
-    {
-      id: "1",
-      title: "Новое поступление гильотинных ножниц STALEX",
-      date: "15 марта 2025",
-      excerpt: "На склад поступила новая партия гильотинных ножниц серии THS с улучшенными характеристиками.",
-      image: "/images/news/news-1.jpg"
-    },
-    {
-      id: "2",
-      title: "Акция на листогибочные прессы",
-      date: "10 марта 2025",
-      excerpt: "Специальное предложение на гидравлические листогибочные прессы серии HBS. Скидка до 10%.",
-      image: "/images/news/news-2.jpg"
-    },
-    {
-      id: "3",
-      title: "Обучающий семинар по работе с оборудованием",
-      date: "5 марта 2025",
-      excerpt: "Приглашаем на бесплатный семинар по эксплуатации и обслуживанию оборудования STALEX.",
-      image: "/images/news/news-3.jpg"
+  const formatDate = (dateString: string) => {
+    try {
+      return format(new Date(dateString), "d MMMM yyyy", { locale: ru });
+    } catch {
+      return dateString;
     }
-  ];
+  };
+
+  const getAuthorName = (email: string | null) => {
+    if (!email) return "Автор";
+    return email.split("@")[0];
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -268,20 +276,54 @@ const Home = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {news.map((item) => (
-                <Link key={item.id} to={`/news/${item.id}`}>
-                  <Card className="overflow-hidden hover:shadow-xl transition-shadow h-full">
-                    <div className="aspect-video bg-secondary"></div>
-                    <div className="p-6">
-                      <div className="text-sm text-muted-foreground mb-2">{item.date}</div>
-                      <h3 className="font-bold text-lg mb-2 hover:text-primary transition-colors">
-                        {item.title}
-                      </h3>
-                      <p className="text-sm text-muted-foreground">{item.excerpt}</p>
+              {newsLoading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i} className="overflow-hidden h-full">
+                    <Skeleton className="aspect-video" />
+                    <div className="p-6 space-y-3">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-6 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
                     </div>
                   </Card>
-                </Link>
-              ))}
+                ))
+              ) : news.length === 0 ? (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  <p className="text-lg">Пока нет публикаций</p>
+                </div>
+              ) : (
+                news.map((item) => (
+                  <Link key={item.id} to={`/news/${item.slug}`}>
+                    <Card className="overflow-hidden hover:shadow-xl transition-shadow h-full">
+                      <div className="aspect-video bg-secondary relative overflow-hidden">
+                        {item.cover_url ? (
+                          <img 
+                            src={item.cover_url} 
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-muted">
+                            <span className="text-muted-foreground">Без обложки</span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-6">
+                        <div className="text-sm text-muted-foreground mb-2">
+                          {formatDate(item.published_at)}
+                        </div>
+                        <h3 className="font-bold text-lg mb-2 hover:text-primary transition-colors">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {item.excerpt || "Читать статью..."}
+                        </p>
+                      </div>
+                    </Card>
+                  </Link>
+                ))
+              )}
             </div>
           </div>
         </section>

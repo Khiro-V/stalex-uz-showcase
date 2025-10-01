@@ -108,6 +108,22 @@ export async function getRelatedNews(
   return data || [];
 }
 
+export async function listLatestNews(limit: number = 3): Promise<NewsPost[]> {
+  const { data, error } = await supabase
+    .from('news_posts')
+    .select('*')
+    .eq('is_published', true)
+    .order('published_at', { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error('Error fetching latest news:', error);
+    throw error;
+  }
+
+  return data || [];
+}
+
 // Admin functions
 export async function createNews(post: Omit<NewsPost, 'id' | 'created_at' | 'updated_at' | 'author_email'>): Promise<NewsPost> {
   const { data, error } = await supabase
