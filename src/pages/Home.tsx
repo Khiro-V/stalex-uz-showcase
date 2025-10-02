@@ -18,11 +18,11 @@ const Home = () => {
   const [newsLoading, setNewsLoading] = useState(true);
 
   useEffect(() => {
-    document.title = "STG CORP - Официальный поставщик оборудования STALEX в Узбекистане";
+    document.title = "Точность. Надёжность. STALEX — официальный дилер в Узбекистане | STG CORP";
     
     const metaDescription = document.querySelector('meta[name="description"]');
     if (metaDescription) {
-      metaDescription.setAttribute('content', 'Поставка промышленного оборудования STALEX в Узбекистан. Гильотины, листогибы, прессы, станки. Гарантия, сервис, консультации.');
+      metaDescription.setAttribute('content', 'Поставка, пусконаладка, обучение и сервис 24/7. Каталог оборудования STALEX — гильотины, листогибы, прессы, токарные и фрезерные станки.');
     }
 
     loadCategories();
@@ -95,28 +95,31 @@ const Home = () => {
       
       <main className="flex-1">
         {/* Hero Section */}
-        <section 
-          className="relative bg-gradient-to-br from-primary to-primary-light text-primary-foreground py-20 md:py-32"
-          style={{
-            backgroundImage: "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-light)) 100%)"
-          }}
-        >
-          <div className="absolute inset-0 bg-black/20"></div>
-          <div className="container mx-auto px-4 relative z-10">
+        <section className="relative overflow-hidden text-white py-24 md:py-40">
+          {/* Background Image */}
+          <img
+            src="/images/hero-stalex.webp"
+            alt="Оборудование STALEX — промышленная обработка металла"
+            className="absolute inset-0 h-full w-full object-cover -z-10"
+            loading="eager"
+          />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-slate-900/65 md:bg-slate-900/50 -z-10" />
+          
+          <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
-                Оборудование STALEX — официальные поставки в Узбекистан
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                Точность. Надёжность. STALEX.
               </h1>
-              <p className="text-lg md:text-xl mb-8 opacity-95">
-                Профессиональное промышленное оборудование для обработки металла: 
-                гильотины, листогибы, прессы и станки
+              <p className="text-xl md:text-2xl mb-8 text-white/95">
+                Официальный дилер: поставка, пусконаладка, обучение и сервис 24/7.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Button asChild size="lg" className="bg-accent hover:bg-accent-light text-accent-foreground">
-                  <Link to="/catalog">Каталог оборудования</Link>
+                <Button asChild size="lg" className="text-lg bg-primary hover:bg-primary/90 text-primary-foreground">
+                  <Link to="/catalog">Каталог</Link>
                 </Button>
-                <Button asChild size="lg" variant="outline" className="bg-white/10 hover:bg-white/20 border-white/30 text-white">
-                  <Link to="/contacts#quote">Запросить КП</Link>
+                <Button asChild size="lg" variant="outline" className="text-lg border-white/30 bg-white/10 hover:bg-white/20 text-white">
+                  <Link to="/contacts">Запросить КП</Link>
                 </Button>
               </div>
             </div>
