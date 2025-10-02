@@ -98,7 +98,7 @@ const Home = () => {
         <section className="relative overflow-hidden text-white py-24 md:py-40">
           {/* Background Image */}
           <img
-            src="/images/hero-stalex.webp"
+            src="/images/hero-stalex.png"
             alt="Оборудование STALEX — промышленная обработка металла"
             className="absolute inset-0 h-full w-full object-cover -z-10"
             loading="eager"
